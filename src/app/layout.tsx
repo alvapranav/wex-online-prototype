@@ -2,8 +2,11 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Realtime API Agents",
-  description: "A demo app from OpenAI.",
+  title: "WEX Online",
+  description: "A demo agent for WEX",
+  icons: {
+    icon: '/wex_logo_nobg.png'
+  }
 };
 
 export default function RootLayout({

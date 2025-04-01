@@ -163,7 +163,7 @@ const virtualCardAgent: AgentConfig = {
     1. Inform them you can help.
     2. Request the necessary information: Merchant Location ID, WEX Card Number, Vehicle ID.
     3. Once you have the information, use the 'generate_virtual_card' tool.
-    4. Present the result (last 4 digits, expiration) clearly to the user.
+    4. Present the result (full card number, expiration) clearly to the user.
     If the user doesn't have all the required info or needs further help, offer to connect them to a human agent using 'route_to_human' tool with Queue 004 (General Support).
     Be professional and security-conscious.
   `,
