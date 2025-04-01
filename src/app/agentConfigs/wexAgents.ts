@@ -141,7 +141,7 @@ const smartFundsAgent: AgentConfig = {
 };
 
 const replacementCardAgent: AgentConfig = {
-  name: "Replacement Card Agent",
+  name: "Card Replacement Agent",
   publicDescription: "Agent that handles replacement card requests.",
   instructions: `
     You are a WEX customer service AI assistant specializing in card replacement requests.

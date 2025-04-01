@@ -12,8 +12,6 @@ import Transcript from "./components/Transcript";
 import Events from "./components/Events";
 import BottomToolbar from "./components/BottomToolbar";
 import { ChatWindow } from "./components/ChatWindow";
-import { PurchaseControlsUI } from "./components/PurchaseControlsUI";
-import { StatementSummaryUI } from "./components/StatementSummaryUI";
 
 // Types
 import { AgentConfig, SessionStatus } from "@/app/types";
