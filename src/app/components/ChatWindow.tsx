@@ -138,7 +138,7 @@ export function ChatWindow({
                             </div>
                             {/* Agent name - only show when connected */}
                             {sessionStatus !== "DISCONNECTED" && agentName && (
-                                <span className="text-xs text-gray-500">Agent: {agentName}</span>
+                                <span className="text-xs text-gray-500">{agentName}</span>
                             )}
                         </div>
                     </div>
@@ -159,15 +159,16 @@ export function ChatWindow({
 
                 {/* --- Chat Content Area (Scrollable) --- */}
                 {/* Conditional Rendering: Initial View vs Conversation */}
-                <div className={`flex-1 overflow-y-auto ${!activeUIComponent ? 'p-0' : ''}`}> {/* Remove padding when UI is active */}
+                <div className={`flex-1 overflow-y-auto ${!activeUIComponent ? 'p-0' : ''}`}> 
                     {/* --- Conditional Rendering --- */}
                     {activeUIComponent === "purchaseControls" ? (
                         <PurchaseControlsUI onBack={onBack} />
                     ) : activeUIComponent === "statementSummary" ? (
                         <StatementSummaryUI onBack={onBack} />
-                    ) : showInitialView ? (
-                        // --- Initial View ---
-                        <div className="p-6">
+                    ) : (
+                        // --- Always show initial view, and conditionally show conversation below it ---
+                        <div className="p-6 relative">
+                            {/* Initial View - Always visible */}
                             <div className="w-14 h-14 rounded-full bg-gradient-to-r from-[#d23f57] to-[#f97316] flex items-center justify-center mb-4">
                                 <Image
                                     unoptimized
@@ -230,96 +231,119 @@ export function ChatWindow({
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    ) : (
-                        // --- Conversation View ---
-                        <div className="p-4">
-                            <div className="space-y-6">
-                                {/* Message Mapping */}
-                                {messages.map((message) => (
-                                    // --- CHECK FOR SEPARATOR TYPE ---
-                                    message.type === 'separator' ? (
-                                        <div key={message.id} className="text-center my-3 py-2"> {/* Add padding */}
-                                            {/* Centered, light grey text */}
-                                            <span className="text-xs text-gray-500 px-2">
-                                                {message.text}
-                                            </span>
-                                            {/* Line below the text */}
-                                            <hr className="mt-2 border-t border-gray-200" /> {/* Adjusted line style */}
-                                        </div>
-                                    ) : (
-                                        // --- ELSE RENDER REGULAR MESSAGE (existing logic) ---
-                                        <div key={message.id} className="flex items-start">
-                                            {/* Bot Avatar */}
-                                            {message.sender === "bot" && (
+                            
+                            {/* Conversation View - Only show if there are messages */}
+                            {messages.length > 0 && (
+                                <div className="p-0">
+                                    <div className="space-y-6">
+                                        {/* Message Mapping */}
+                                        {messages.map((message) => (
+                                            // --- CHECK FOR SEPARATOR TYPE ---
+                                            message.type === 'separator' ? (
+                                                <div key={message.id} className="text-center my-3 py-2"> {/* Add padding */}
+                                                    {/* Centered, light grey text */}
+                                                    <span className="text-xs text-gray-500 px-2">
+                                                        {message.text}
+                                                    </span>
+                                                    {/* Line below the text */}
+                                                    <hr className="mt-2 border-t border-gray-200" /> {/* Adjusted line style */}
+                                                </div>
+                                            ) : (
+                                                // --- ELSE RENDER REGULAR MESSAGE (existing logic) ---
+                                                <div key={message.id} className="flex items-start">
+                                                    {/* Bot Avatar */}
+                                                    {message.sender === "bot" && (
+                                                        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#d23f57] to-[#f97316] flex-shrink-0 flex items-center justify-center mr-3">
+                                                            {/* Bot avatar image */}
+                                                            <Image unoptimized src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-CBZCvLyY7pIHy6Hez4MexhgRljVkjE.png" alt="WEX IQ Icon" width={16} height={16} className="w-4 h-4" />
+                                                        </div>
+                                                    )}
+                                                    {/* Message Bubble Container */}
+                                                    <div className={`flex flex-col ${message.sender === "user" ? "items-end ml-auto" : "items-start"}`}>
+                                                        <div className="text-xs text-gray-500 mb-1">{message.timestamp}</div>
+                                                        {/* Existing rendering for actual message bubbles */}
+                                                        {message.isLoading ? (
+                                                            <div className={`p-4 rounded-xl ${message.sender === "bot" ? "bg-[#e4f5fd] text-[#1d2c38]" : "bg-[#f0f9ff] text-[#1d2c38] ml-auto"} max-w-[300px]`}> Loading... </div>
+                                                        ) : message.text === "__PROFILE_TEMPLATE__" || message.text === "__STATEMENT_TEMPLATE__" ? (
+                                                            <div className={`p-4 rounded-xl ${message.sender === "bot" ? "bg-[#e4f5fd] text-[#1d2c38]" : "bg-[#f0f9ff] text-[#1d2c38] ml-auto"} max-w-[300px] border border-dashed border-gray-400`}> Template... </div>
+                                                        ) : (
+                                                            <div className={`p-4 rounded-xl ${message.sender === "bot" ? "bg-[#e4f5fd] text-[#1d2c38]" : "bg-[#f0f9ff] text-[#1d2c38] ml-auto"} max-w-[300px]`}> {message.text} </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )
+                                        ))}
+
+                                        {isTyping && (
+                                            <div className="flex items-start"> {/* Mimic message structure */}
+                                                {/* Bot Avatar */}
                                                 <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#d23f57] to-[#f97316] flex-shrink-0 flex items-center justify-center mr-3">
-                                                    {/* Bot avatar image */}
-                                                    <Image unoptimized src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-CBZCvLyY7pIHy6Hez4MexhgRljVkjE.png" alt="WEX IQ Icon" width={16} height={16} className="w-4 h-4" />
+                                                    <Image
+                                                        unoptimized
+                                                        src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-CBZCvLyY7pIHy6Hez4MexhgRljVkjE.png"
+                                                        alt="WEX IQ Icon"
+                                                        width={16}
+                                                        height={16}
+                                                        className="w-4 h-4"
+                                                    />
                                                 </div>
-                                            )}
-                                            {/* Message Bubble Container */}
-                                            <div className={`flex flex-col ${message.sender === "user" ? "items-end ml-auto" : "items-start"}`}>
-                                                <div className="text-xs text-gray-500 mb-1">{message.timestamp}</div>
-                                                {/* Existing rendering for actual message bubbles */}
-                                                {/* ... (keep your existing logic for isLoading, text, templates) ... */}
-                                                {message.isLoading ? (
-                                                    <div className={`p-4 rounded-xl ${message.sender === "bot" ? "bg-[#e4f5fd] text-[#1d2c38]" : "bg-[#f0f9ff] text-[#1d2c38] ml-auto"} max-w-[300px]`}> Loading... </div>
-                                                ) : message.text === "__PROFILE_TEMPLATE__" || message.text === "__STATEMENT_TEMPLATE__" ? (
-                                                    <div className={`p-4 rounded-xl ${message.sender === "bot" ? "bg-[#e4f5fd] text-[#1d2c38]" : "bg-[#f0f9ff] text-[#1d2c38] ml-auto"} max-w-[300px] border border-dashed border-gray-400`}> Template... </div>
-                                                ) : (
-                                                    <div className={`p-4 rounded-xl ${message.sender === "bot" ? "bg-[#e4f5fd] text-[#1d2c38]" : "bg-[#f0f9ff] text-[#1d2c38] ml-auto"} max-w-[300px]`}> {message.text} </div>
-                                                )}
+                                                {/* Loading Indicator Bubble */}
+                                                <div className={`flex flex-col items-start`}>
+                                                    <div className="text-xs text-gray-500 mb-1">Now</div> {/* Optional: Timestamp */}
+                                                    <div className={`p-4 rounded-xl bg-[#e4f5fd] text-[#1d2c38] max-w-[300px]`}>
+                                                        {/* Ellipses animation */}
+                                                        <div className="flex space-x-1">
+                                                            <div className="w-2 h-2 bg-[#0058a3] rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
+                                                            <div className="w-2 h-2 bg-[#0058a3] rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
+                                                            <div className="w-2 h-2 bg-[#0058a3] rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
-                                    )
-                                ))}
+                                        )}
 
-                                {isTyping && (
-                                    <div className="flex items-start"> {/* Mimic message structure */}
-                                        {/* Bot Avatar */}
-                                        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#d23f57] to-[#f97316] flex-shrink-0 flex items-center justify-center mr-3">
-                                            <Image
-                                                unoptimized
-                                                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-CBZCvLyY7pIHy6Hez4MexhgRljVkjE.png"
-                                                alt="WEX IQ Icon"
-                                                width={16}
-                                                height={16}
-                                                className="w-4 h-4"
-                                            />
-                                        </div>
-                                        {/* Loading Indicator Bubble */}
-                                        <div className={`flex flex-col items-start`}>
-                                            <div className="text-xs text-gray-500 mb-1">Now</div> {/* Optional: Timestamp */}
-                                            <div className={`p-4 rounded-xl bg-[#e4f5fd] text-[#1d2c38] max-w-[300px]`}>
-                                                {/* Ellipses animation */}
-                                                <div className="flex space-x-1">
-                                                    <div className="w-2 h-2 bg-[#0058a3] rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
-                                                    <div className="w-2 h-2 bg-[#0058a3] rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
-                                                    <div className="w-2 h-2 bg-[#0058a3] rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        {/* Div to scroll to */}
+                                        <div ref={messagesEndRef} />
                                     </div>
-                                )}
 
-                                {/* Div to scroll to */}
-                                <div ref={messagesEndRef} />
-                            </div>
-
-                            {/* Suggestion Chips (conditional) */}
-                            {messages.length > 0 && !isTyping && suggestions.length > 0 && (
-                                <div className="flex flex-wrap gap-2 mt-4 mb-2">
-                                    {suggestions.map((suggestion, index) => (
-                                        <button
-                                            key={index}
-                                            className="px-3 py-2 bg-[#f0f9ff] text-[#0058a3] rounded-full text-sm hover:bg-[#e4f5fd] transition-colors"
-                                            onClick={() => handleSuggestionClick(suggestion.text)}
-                                        >
-                                            {suggestion.text}
-                                        </button>
-                                    ))}
+                                    {/* Suggestion Chips (conditional) */}
+                                    {!isTyping && suggestions.length > 0 && (
+                                        <div className="flex flex-wrap gap-2 mt-4 mb-2">
+                                            {suggestions.map((suggestion, index) => (
+                                                <button
+                                                    key={index}
+                                                    className="px-3 py-2 bg-[#f0f9ff] text-[#0058a3] rounded-full text-sm hover:bg-[#e4f5fd] transition-colors"
+                                                    onClick={() => handleSuggestionClick(suggestion.text)}
+                                                >
+                                                    {suggestion.text}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             )}
+                            
+                            {/* Audio playback toggle button */}
+                            <div className="absolute bottom-4 right-4">
+                                <button
+                                    onClick={() => setIsAudioPlaybackEnabled(!isAudioPlaybackEnabled)}
+                                    className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors"
+                                    title={isAudioPlaybackEnabled ? "Mute audio" : "Enable audio"}
+                                >
+                                    {isAudioPlaybackEnabled ? (
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                                            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                                        </svg>
+                                    ) : (
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                                            <line x1="23" y1="9" x2="17" y2="15"></line>
+                                            <line x1="17" y1="9" x2="23" y2="15"></line>
+                                        </svg>
+                                    )}
+                                </button>
+                            </div>
                         </div>
                     )}
                 </div>
@@ -368,27 +392,6 @@ export function ChatWindow({
                         </a>{" "}
                         for more information.
                     </p>
-                </div>
-
-                <div className="absolute bottom-4 right-4">
-                    <button
-                        onClick={() => setIsAudioPlaybackEnabled(!isAudioPlaybackEnabled)}
-                        className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors"
-                        title={isAudioPlaybackEnabled ? "Mute audio" : "Enable audio"}
-                    >
-                        {isAudioPlaybackEnabled ? (
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-                            </svg>
-                        ) : (
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                                <line x1="23" y1="9" x2="17" y2="15"></line>
-                                <line x1="17" y1="9" x2="23" y2="15"></line>
-                            </svg>
-                        )}
-                    </button>
                 </div>
             </div>
         </div>

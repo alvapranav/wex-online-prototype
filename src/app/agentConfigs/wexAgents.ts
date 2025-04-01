@@ -107,7 +107,7 @@ const displayStatementSummaryUITool = {
 
 // Define agents
 const fraudAlertAgent: AgentConfig = {
-  name: "fraud_alert",
+  name: "Fraud Agent",
   publicDescription: "Agent that handles fraud alerts and suspicious transactions.",
   instructions: `
     You are a WEX customer service AI assistant specializing in fraud alerts.
@@ -123,7 +123,7 @@ const fraudAlertAgent: AgentConfig = {
 };
 
 const smartFundsAgent: AgentConfig = {
-  name: "smartfunds",
+  name: "Smartfunds Agent",
   publicDescription: "Agent that handles SmartFunds balance inquiries.",
   instructions: `
     You are a WEX customer service AI assistant specializing in SmartFunds inquiries.
@@ -141,7 +141,7 @@ const smartFundsAgent: AgentConfig = {
 };
 
 const replacementCardAgent: AgentConfig = {
-  name: "replacement_card",
+  name: "Replacement Card Agent",
   publicDescription: "Agent that handles replacement card requests.",
   instructions: `
     You are a WEX customer service AI assistant specializing in card replacement requests.
@@ -155,7 +155,7 @@ const replacementCardAgent: AgentConfig = {
 };
 
 const virtualCardAgent: AgentConfig = {
-  name: "virtual_card",
+  name: "Virtual Card Agent",
   publicDescription: "Agent that helps generate virtual cards for merchant payments.",
   instructions: `
     You are a WEX customer service AI assistant specializing in virtual card generation.
@@ -171,7 +171,7 @@ const virtualCardAgent: AgentConfig = {
 };
 
 const mainAgent: AgentConfig = {
-  name: "main",
+  name: "Main Agent",
   publicDescription: "Main WEX customer service agent that routes to specialized agents or handles general inquiries.",
   instructions: `
     You are WEX IQ, an AI assistant for WEX fleet card customers. Your role is to understand the user's need and take the appropriate action.

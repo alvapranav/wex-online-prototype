@@ -570,7 +570,43 @@ function App() {
 
   const handleSuggestionClick = (text: string) => {
     setChatInput(text);
-    handleSendChatMessage();
+    
+    // Add user message
+    const userMessageId = uuidv4();
+    const now = new Date();
+    setChatMessages(prev => [...prev, {
+      id: userMessageId,
+      sender: "user",
+      text: text,
+      timestamp: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    }]);
+
+    // Show typing indicator
+    setIsTyping(true);
+
+    // Send the message to the OpenAI agent if connected
+    if (sessionStatus === "CONNECTED" && dcRef.current?.readyState === "open") {
+      sendClientEvent(
+        {
+          type: "conversation.item.create",
+          item: {
+            type: "message",
+            role: "user",
+            content: [{ type: "input_text", text: text }],
+          },
+        },
+        "(send user text message from suggestion)"
+      );
+      sendClientEvent({ type: "response.create" }, "trigger response");
+    }
+
+    // Clear input
+    setChatInput("");
+
+    // If we're in initial view, switch to conversation view
+    if (chatView === "initial") {
+      setChatView("conversation");
+    }
   };
 
   // Card action handlers
