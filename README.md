@@ -1,72 +1,103 @@
-# Realtime API Agents Demo
+# WEX IQ - Next-Generation Fleet Management Dashboard
 
-This is a simple demonstration of more advanced, agentic patterns built on top of the Realtime API. In particular, this demonstrates:
-- Sequential agent handoffs according to a defined agent graph (taking inspiration from [OpenAI Swarm](https://github.com/openai/swarm))
-- Background escalation to more intelligent models like o1-mini for high-stakes decisions
-- Prompting models to follow a state machine, for example to accurately collect things like names and phone numbers with confirmation character by character to authenticate a user.
+![WEX IQ Dashboard](/public/wex-dashboard-preview.png)
 
-You should be able to use this repo to prototype your own multi-agent realtime voice app in less than 20 minutes!
+This prototype demonstrates a futuristic vision of the WEX Online platform, reimagined for 2025 and beyond. The application integrates advanced AI assistance, real-time fleet management, and interactive financial controls in a seamless, conversation-driven interface.
 
-![Screenshot of the Realtime API Agents Demo](/public/screenshot.png)
+## Key Features
+
+### WEX IQ - AI Assistant
+- **Conversational Interface**: Natural language interaction with an AI assistant that understands fleet management context and user needs
+- **Voice Interaction**: Full speech-to-text and text-to-speech capabilities for hands-free operation
+- **Real-time Transcription**: Live transcription of user speech for immediate feedback
+- **Contextual Understanding**: The assistant maintains conversation context and can reference previous interactions
+
+### Interactive UI Components
+- **In-Chat UI Elements**: Interactive components like purchase controls and statement summaries appear directly within the conversation flow
+- **Dynamic Purchase Controls**: Adjust spending limits, location restrictions, and time periods with intuitive controls
+- **Statement Management**: View and interact with financial statements without leaving the conversation context
+
+### Fleet Management Dashboard
+- **Real-time Activity Monitoring**: Track fleet activity, spending, and transaction history
+- **Transaction Insights**: Visual breakdowns of spending patterns and category distributions
+- **Proactive Alerts**: Get notified about unusual spending, maintenance needs, and optimization opportunities
+
+## Technology Stack
+
+- **Frontend**: Next.js with TypeScript and React
+- **Styling**: TailwindCSS for responsive design
+- **AI Integration**: OpenAI Realtime API for voice and conversation capabilities
+- **State Management**: React hooks and context for application state
+- **UI Components**: Custom components built with accessibility in mind
 
 ## Setup
 
-- This is a Next.js typescript app
-- Install dependencies with `npm i`
-- Add your `OPENAI_API_KEY` to your env
-- Start the server with `npm run dev`
-- Open your browser to [http://localhost:3000](http://localhost:3000) to see the app. It should automatically connect to the `simpleExample` Agent Set.
+- Install dependencies with `npm install`
+- Add your `OPENAI_API_KEY` to your `.env.local` file
+- Start the development server with `npm run dev`
+- Open your browser to [http://localhost:3000](http://localhost:3000) to experience the prototype
 
-## Configuring Agents
-Configuration in `src/app/agentConfigs/simpleExample.ts`
-```javascript
-import { AgentConfig } from "@/app/types";
-import { injectTransferTools } from "./utils";
+## User Experience
 
-// Define agents
-const haiku: AgentConfig = {
-  name: "haiku",
-  publicDescription: "Agent that writes haikus.", // Context for the agent_transfer tool
-  instructions:
-    "Ask the user for a topic, then reply with a haiku about that topic.",
-  tools: [],
-};
+### Dashboard Overview
+The main dashboard provides a comprehensive view of fleet operations, with cards for quick access to key metrics and recent activity. The sidebar navigation allows users to access different sections of the application.
 
-const greeter: AgentConfig = {
-  name: "greeter",
-  publicDescription: "Agent that greets the user.",
-  instructions:
-    "Please greet the user and ask them if they'd like a Haiku. If yes, transfer them to the 'haiku' agent.",
-  tools: [],
-  downstreamAgents: [haiku],
-};
+### WEX IQ Assistant
+The AI assistant is accessible through a chat window that can be toggled from any screen. Users can interact with WEX IQ through:
+- Text input
+- Voice commands (with real-time transcription)
+- Quick action buttons for common tasks
 
-// add the transfer tool to point to downstreamAgents
-const agents = injectTransferTools([greeter, haiku]);
+### Interactive Features
 
-export default agents;
-```
+#### Purchase Controls
+Users can create and manage purchase control profiles with:
+- Date range selection via an interactive calendar
+- Location and radius settings with autofill capabilities
+- Spending limits adjustable through an intuitive slider
+- Category selection for permitted purchase types
 
-This fully specifies the agent set that was used in the interaction shown in the screenshot above.
+#### Statement Management
+The statement summary interface provides:
+- Visual breakdown of spending by category
+- Savings highlights and opportunities
+- Quick access to payment options
+- Downloadable statement formats
 
-### Next steps
-- Check out the configs in `src/app/agentConfigs`. The example above is a minimal demo that illustrates the core concepts.
-- [frontDeskAuthentication](src/app/agentConfigs/frontDeskAuthentication) Guides the user through a step-by-step authentication flow, confirming each value character-by-character, authenticates the user with a tool call, and then transfers to another agent. Note that the second agent is intentionally "bored" to show how to prompt for personality and tone.
-- [customerServiceRetail](src/app/agentConfigs/customerServiceRetail) Also guides through an authentication flow, reads a long offer from a canned script verbatim, and then walks through a complex return flow which requires looking up orders and policies, gathering user context, and checking with `o1-mini` to ensure the return is eligible. To test this flow, say that you'd like to return your snowboard and go through the necessary prompts!
+## Agent Configuration
 
-### Defining your own agents
-- You can copy these to make your own multi-agent voice app! Once you make a new agent set config, add it to `src/app/agentConfigs/index.ts` and you should be able to select it in the UI in the "Scenario" dropdown menu.
-- To see how to define tools and toolLogic, including a background LLM call, see [src/app/agentConfigs/customerServiceRetail/returns.ts](src/app/agentConfigs/customerServiceRetail/returns.ts)
-- To see how to define a detailed personality and tone, and use a prompt state machine to collect user information step by step, see [src/app/agentConfigs/frontDeskAuthentication/authentication.ts](src/app/agentConfigs/frontDeskAuthentication/authentication.ts)
-- To see how to wire up Agents into a single Agent Set, see [src/app/agentConfigs/frontDeskAuthentication/index.ts](src/app/agentConfigs/frontDeskAuthentication/index.ts)
-- If you want help creating your own prompt using these conventions, we've included a metaprompt [here](src/app/agentConfigs/voiceAgentMetaprompt.txt), or you can use our [Voice Agent Metaprompter GPT](https://chatgpt.com/g/g-678865c9fb5c81918fa28699735dd08e-voice-agent-metaprompt-gpt)
+The WEX IQ assistant is powered by a sophisticated agent system defined in `src/app/agentConfigs/wexAgents.ts`. The agent is configured to:
 
-## UI
-- You can select agent scenarios in the Scenario dropdown, and automatically switch to a specific agent with the Agent dropdown.
-- The conversation transcript is on the left, including tool calls, tool call responses, and agent changes. Click to expand non-message elements.
-- The event log is on the right, showing both client and server events. Click to see the full payload.
-- On the bottom, you can disconnect, toggle between automated voice-activity detection or PTT, turn off audio playback, and toggle logs.
+- Understand fleet management terminology and concepts
+- Provide contextual assistance based on user role and permissions
+- Trigger appropriate UI components based on conversation context
+- Handle complex queries about transactions, spending patterns, and account management
 
-## Core Contributors
-- Noah MacCallum - [noahmacca](https://x.com/noahmacca)
-- Ilan Bigio - [ibigio](https://github.com/ibigio)
+The agent can be customized further by modifying its configuration and adding specialized tools for specific fleet management tasks.
+
+## Future Roadmap
+
+This prototype represents an initial vision for the future of WEX Online. Planned enhancements include:
+
+- **Predictive Analytics**: AI-powered forecasting of fuel prices and spending patterns
+- **Maintenance Scheduling**: Intelligent maintenance recommendations based on vehicle usage patterns
+- **Enhanced Authorization Controls**: More granular control over purchase authorizations with multi-factor approval workflows
+- **Mobile Companion App**: Synchronized experience between desktop and mobile interfaces
+- **AR/VR Integration**: Immersive data visualization for complex fleet analytics
+
+## Getting Involved
+
+This prototype is designed to gather feedback and inspire discussion about the future of fleet management interfaces. We welcome:
+
+- Feature suggestions
+- Usability feedback
+- Integration ideas
+- Design enhancements
+
+## Acknowledgments
+
+This prototype builds upon the OpenAI Realtime API framework and incorporates design principles from modern enterprise UX research. Special thanks to the WEX design and product teams for their vision and guidance.
+
+---
+
+© 2025 WEX Inc. | This is a prototype for demonstration purposes only.
