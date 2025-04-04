@@ -169,16 +169,8 @@ export function ChatWindow({
                 </div>
 
                 {/* --- Chat Content Area (Scrollable) --- */}
-                {/* Conditional Rendering: Initial View vs Conversation */}
-                <div className={`flex-1 overflow-y-auto ${!activeUIComponent ? 'p-0' : ''}`}> 
-                    {/* --- Conditional Rendering --- */}
-                    {activeUIComponent === "purchaseControls" ? (
-                        <PurchaseControlsUI onBack={onBack} />
-                    ) : activeUIComponent === "statementSummary" ? (
-                        <StatementSummaryUI onBack={onBack} />
-                    ) : (
-                        // --- Always show initial view, and conditionally show conversation below it ---
-                        <div className="p-6 relative">
+                <div className="flex-1 overflow-y-auto p-0"> 
+                    <div className="p-6 relative">
                             {/* Initial View - Always visible */}
                             <div className="w-14 h-14 rounded-full bg-gradient-to-r from-[#d23f57] to-[#f97316] flex items-center justify-center mb-4">
                                 <Image
@@ -277,6 +269,16 @@ export function ChatWindow({
                                                             <div className={`p-4 rounded-xl ${message.sender === "bot" ? "bg-[#e4f5fd] text-[#1d2c38]" : "bg-[#f0f9ff] text-[#1d2c38] ml-auto"} max-w-[300px]`}> Loading... </div>
                                                         ) : message.text === "__PROFILE_TEMPLATE__" || message.text === "__STATEMENT_TEMPLATE__" ? (
                                                             <div className={`p-4 rounded-xl ${message.sender === "bot" ? "bg-[#e4f5fd] text-[#1d2c38]" : "bg-[#f0f9ff] text-[#1d2c38] ml-auto"} max-w-[300px] border border-dashed border-gray-400`}> Template... </div>
+                                                        ) : message.text === "Here are your purchase controls settings:" ? (
+                                                            <div className={`p-4 rounded-xl ${message.sender === "bot" ? "bg-[#e4f5fd] text-[#1d2c38]" : "bg-[#f0f9ff] text-[#1d2c38] ml-auto"} max-w-[320px]`}>
+                                                                <div className="mb-2">{message.text}</div>
+                                                                <PurchaseControlsUI onBack={() => {}} />
+                                                            </div>
+                                                        ) : message.text === "Here's your latest statement summary:" ? (
+                                                            <div className={`p-4 rounded-xl ${message.sender === "bot" ? "bg-[#e4f5fd] text-[#1d2c38]" : "bg-[#f0f9ff] text-[#1d2c38] ml-auto"} max-w-[320px]`}>
+                                                                <div className="mb-2">{message.text}</div>
+                                                                <StatementSummaryUI onBack={() => {}} />
+                                                            </div>
                                                         ) : (
                                                             <div className={`p-4 rounded-xl ${message.sender === "bot" ? "bg-[#e4f5fd] text-[#1d2c38]" : "bg-[#f0f9ff] text-[#1d2c38] ml-auto"} max-w-[300px]`}> {message.text} </div>
                                                         )}
@@ -369,7 +371,6 @@ export function ChatWindow({
                                 </button>
                             </div>
                         </div>
-                    )}
                 </div>
 
                 {/* --- Chat Input Area --- */}

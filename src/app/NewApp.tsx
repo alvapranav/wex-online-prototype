@@ -90,7 +90,38 @@ function NewApp() {
 
     const handleShowUIComponent = (componentName: string, params?: any) => {
         console.log("Setting active UI component:", componentName, "with params:", params);
-        setActiveUIComponent(componentName);
+        
+        // Handle UI components in chat bubbles instead of navigating to separate pages
+        if (componentName === "purchaseControls") {
+            // Add a bot message with the purchase controls UI
+            const botMessageId = uuidv4();
+            const now = new Date();
+            setChatMessages((prev) => [
+                ...prev,
+                {
+                    id: botMessageId,
+                    sender: "bot",
+                    text: "Here are your purchase controls settings:",
+                    timestamp: now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                }
+            ]);
+        } else if (componentName === "statementSummary") {
+            // Add a bot message with the statement summary UI
+            const botMessageId = uuidv4();
+            const now = new Date();
+            setChatMessages((prev) => [
+                ...prev,
+                {
+                    id: botMessageId,
+                    sender: "bot",
+                    text: "Here's your latest statement summary:",
+                    timestamp: now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                }
+            ]);
+        } else {
+            // For other components, navigate to their page as before
+            setActiveUIComponent(componentName);
+        }
     };
 
     const sendClientEvent = (eventObj: any, eventNameSuffix = "") => {
@@ -493,12 +524,16 @@ function NewApp() {
     };
 
     const handleAdjustControlsClick = () => {
+        // Just send the user message and let the agent respond
+        // The agent will trigger the UI component through the server event
         handleSuggestionClick("I want to adjust my purchase controls");
     };
     const handleManageCardsClick = () => {
         handleSuggestionClick("I need to manage my cards");
     };
     const handleViewStatementsClick = () => {
+        // Just send the user message and let the agent respond
+        // The agent will trigger the UI component through the server event
         handleSuggestionClick("Show me my statements");
     };
     const handleReviewDeclinedClick = () => {
