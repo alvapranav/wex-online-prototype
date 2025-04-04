@@ -21,6 +21,7 @@ import { useHandleServerEvent } from "./hooks/useHandleServerEvent";
 import { createRealtimeConnection } from "./lib/realtimeConnection";
 import { allAgentSets, defaultAgentSetKey } from "@/app/agentConfigs";
 
+
 // Icon imports (from lucide-react)
 import {
     CreditCard,
@@ -71,9 +72,9 @@ function NewApp() {
     const [chatInput, setChatInput] = useState<string>("");
     const [isTyping, setIsTyping] = useState<boolean>(false);
     const [suggestions, setSuggestions] = useState<Array<{ text: string; action?: string }>>([
-        { text: "How do I adjust my purchase controls?" },
-        { text: "Can I see my recent transactions?" },
-        { text: "What's my current balance?" },
+        // { text: "How do I adjust my purchase controls?" },
+        // { text: "Can I see my recent transactions?" },
+        // { text: "What's my current balance?" },
     ]);
 
     const [dataChannel, setDataChannel] = useState<RTCDataChannel | null>(null);

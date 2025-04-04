@@ -54,21 +54,30 @@ function handleSendTextLink(params: any) {
 function handleGenerateVirtualCard(params: any) {
     const { merchant_location_id, wex_card_number, vehicle_id } = params;
 
-    // In a real implementation, this would call your card generation API
-    // Here we're generating mock data
-    const last4 = Math.floor(1000 + Math.random() * 9000).toString();
-    const expirationMonth = Math.floor(1 + Math.random() * 12).toString().padStart(2, '0');
-    const expirationYear = (new Date().getFullYear() + 3).toString().slice(-2);
+    // Generate a random 16-digit credit card number as a string.
+    const cardNumber = Array.from({ length: 16 }, () =>
+        Math.floor(Math.random() * 10)
+    ).join('');
 
-    console.log(`Generated virtual card for merchant ${merchant_location_id}, card ${wex_card_number}, vehicle ${vehicle_id}`);
+    // Generate expiration date components.
+    const expirationMonth = Math.floor(1 + Math.random() * 12)
+        .toString()
+        .padStart(2, "0");
+    // Using a 4-digit year for clarity.
+    const expirationYear = (new Date().getFullYear() + 3).toString();
+
+    const message = `Here is your new virtual card: **${cardNumber}**, which expires on **${expirationMonth}/${expirationYear}**.`;
+
+    console.log(`Generated virtual card: ${cardNumber}, ${expirationMonth}/${expirationYear}`);
 
     return {
         success: true,
-        card_number_last4: last4,
+        card_number: cardNumber, // Full 16-digit number.
         expiration_date: `${expirationMonth}/${expirationYear}`,
         merchant_location_id,
         wex_card_number,
-        vehicle_id
+        vehicle_id,
+        message
     };
 }
 

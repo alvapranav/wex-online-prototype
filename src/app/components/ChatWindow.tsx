@@ -9,7 +9,7 @@ import {
     Check,
 } from "lucide-react";
 import Image from "next/image";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { PurchaseControlsUI } from "./PurchaseControlsUI";
 import { StatementSummaryUI } from "./StatementSummaryUI";
 
@@ -55,6 +55,7 @@ interface ChatWindowProps {
     isPTTActive: boolean;
     handleTalkButtonDown: () => void;
     handleTalkButtonUp: () => void;
+    currentSpeechText?: string; // Add this prop to receive the current speech text
 }
 
 export function ChatWindow({
@@ -81,16 +82,26 @@ export function ChatWindow({
     isPTTActive,
     handleTalkButtonDown,
     handleTalkButtonUp,
+    currentSpeechText,
 }: ChatWindowProps) {
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const [isMicActive, setIsMicActive] = useState(false);
+    const [speechText, setSpeechText] = useState("");
+
+    // Update speech text when currentSpeechText prop changes
+    useEffect(() => {
+        if (currentSpeechText !== undefined) {
+            setSpeechText(currentSpeechText);
+        }
+    }, [currentSpeechText]);
 
     // Scroll to bottom of messages
     useEffect(() => {
         if (!activeUIComponent) { // Only scroll if chat is visible
             messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
         }
-    }, [messages, activeUIComponent]);
+    }, [messages, activeUIComponent, speechText]);
 
     // Determine if the initial view should be shown
     const showInitialView = !activeUIComponent && messages.length === 0;
@@ -302,6 +313,19 @@ export function ChatWindow({
                                             </div>
                                         )}
 
+                                        {/* Show user's speech text while microphone is active */}
+                                        {isMicActive && speechText && (
+                                            <div className="flex items-start">
+                                                {/* User Speech Message */}
+                                                <div className="flex flex-col items-end ml-auto">
+                                                    <div className="text-xs text-gray-500 mb-1">Now</div>
+                                                    <div className="p-4 rounded-xl bg-[#f0f9ff] text-[#1d2c38] ml-auto max-w-[300px] border border-blue-300">
+                                                        {speechText}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+
                                         {/* Div to scroll to */}
                                         <div ref={messagesEndRef} />
                                     </div>
@@ -368,19 +392,57 @@ export function ChatWindow({
                                 <Send className="w-5 h-5" />
                             </button>
                             {isPTTActive && (
-                                <button
-                                    className="p-2 rounded-full bg-blue-500 hover:bg-blue-600 text-white"
-                                    onMouseDown={handleTalkButtonDown}
-                                    onMouseUp={handleTalkButtonUp}
-                                    onMouseLeave={handleTalkButtonUp}
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-                                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                                        <line x1="12" y1="19" x2="12" y2="23"></line>
-                                        <line x1="8" y1="23" x2="16" y2="23"></line>
-                                    </svg>
-                                </button>
+                                <div className="relative">
+                                    <button
+                                        className="p-2 rounded-full bg-blue-500 hover:bg-blue-600 text-white"
+                                        onMouseDown={() => {
+                                            setIsMicActive(true);
+                                            handleTalkButtonDown();
+                                        }}
+                                        onMouseUp={() => {
+                                            setIsMicActive(false);
+                                            handleTalkButtonUp();
+                                        }}
+                                        onMouseLeave={() => {
+                                            setIsMicActive(false);
+                                            handleTalkButtonUp();
+                                        }}
+                                        onTouchStart={() => {
+                                            setIsMicActive(true);
+                                            handleTalkButtonDown();
+                                        }}
+                                        onTouchEnd={() => {
+                                            setIsMicActive(false);
+                                            handleTalkButtonUp();
+                                        }}
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                            <line x1="12" y1="19" x2="12" y2="23"></line>
+                                            <line x1="8" y1="23" x2="16" y2="23"></line>
+                                        </svg>
+                                    </button>
+                                    
+                                    {/* Audio wave animation - appears when microphone is active */}
+                                    {isMicActive && (
+                                        <div className="absolute -top-16 left-1/2 transform -translate-x-1/2 bg-white p-3 rounded-lg shadow-md z-10 w-40">
+                                            <div className="flex justify-center items-end h-10 gap-1">
+                                                {[...Array(8)].map((_, i) => (
+                                                    <div 
+                                                        key={i} 
+                                                        className="w-1 bg-blue-500 rounded-full animate-pulse"
+                                                        style={{
+                                                            height: `${Math.max(20, Math.floor(Math.random() * 40))}px`,
+                                                            animationDuration: `${0.7 + Math.random() * 0.6}s`,
+                                                            animationDelay: `${i * 0.05}s`
+                                                        }}
+                                                    ></div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             )}
                         </div>
                     </div>

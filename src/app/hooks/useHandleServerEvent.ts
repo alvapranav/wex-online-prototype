@@ -11,7 +11,6 @@ export interface UseHandleServerEventParams {
   selectedAgentConfigSet: AgentConfig[] | null;
   sendClientEvent: (eventObj: any, eventNameSuffix?: string) => void;
   setSelectedAgentName: (name: string) => void;
-  shouldForceResponse?: boolean;
   onAgentResponse?: (text: string) => void;
   setIsTyping?: (isTyping: boolean) => void;
   onShowUIComponent?: (componentName: string, params?: any) => void;
@@ -23,7 +22,6 @@ export function useHandleServerEvent({
   selectedAgentConfigSet,
   sendClientEvent,
   setSelectedAgentName,
-  shouldForceResponse,
   onAgentResponse,
   setIsTyping,
   onShowUIComponent
@@ -47,17 +45,93 @@ export function useHandleServerEvent({
     const currentAgent = selectedAgentConfigSet?.find(
       (a) => a.name === selectedAgentName
     );
-
+  
     addTranscriptBreadcrumb(`function call: ${functionCallParams.name}`, args);
-
-    if (currentAgent?.toolLogic?.[functionCallParams.name]) {
+  
+    // List of tool names to be routed through the API endpoint.
+    const apiRoutedTools = [
+      "display_purchase_controls_ui",
+      "display_statement_summary_ui",
+      "transferAgents",
+      "route_to_human",
+      "send_text_link",
+      "generate_virtual_card"
+    ];
+  
+    if (apiRoutedTools.includes(functionCallParams.name)) {
+      console.log(`Routing ${functionCallParams.name} via API`);
+      try {
+        const res = await fetch("/api/tools", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            tool_name: functionCallParams.name,
+            tool_params: args,
+          }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          // For UI tools, handle via onShowUIComponent.
+          if (
+            (functionCallParams.name === "display_purchase_controls_ui" ||
+              functionCallParams.name === "display_statement_summary_ui") &&
+            onShowUIComponent
+          ) {
+            console.log("Calling onShowUIComponent with:", data.displayUI, data.params || args);
+            onShowUIComponent(data.displayUI, data.params || args);
+          }
+          // For transferAgents, update the selected agent.
+          if (functionCallParams.name === "transferAgents" && data.transfer_to) {
+            setSelectedAgentName(data.transfer_to);
+          }
+          // For generate_virtual_card, build a custom message that includes the full card details.
+          if (functionCallParams.name === "generate_virtual_card") {
+            sendClientEvent({
+              type: "conversation.item.create",
+              item: {
+                type: "function_call_output",
+                call_id: functionCallParams.call_id,
+                output: JSON.stringify({
+                  name: functionCallParams.name,
+                  arguments: data,
+                }),
+              },
+            });
+            addTranscriptBreadcrumb(
+              `function call: ${functionCallParams.name} response`,
+              data
+            );
+            sendClientEvent({ type: "response.create" });
+          } else {
+            // For all other routed tools, send the API response directly.
+            sendClientEvent({
+              type: "conversation.item.create",
+              item: {
+                type: "function_call_output",
+                call_id: functionCallParams.call_id,
+                output: JSON.stringify(data),
+              },
+            });
+            addTranscriptBreadcrumb(
+              `function call: ${functionCallParams.name} response`,
+              data
+            );
+          }
+        } else {
+          console.error("Tool API error:", data.error);
+        }
+      } catch (err) {
+        console.error(`Error calling tools API for ${functionCallParams.name}:`, err);
+      }
+      return;
+    } else if (currentAgent?.toolLogic?.[functionCallParams.name]) {
+      // Fall back to local tool logic if defined.
       const fn = currentAgent.toolLogic[functionCallParams.name];
       const fnResult = await fn(args, transcriptItems);
       addTranscriptBreadcrumb(
         `function call result: ${functionCallParams.name}`,
         fnResult
       );
-
       sendClientEvent({
         type: "conversation.item.create",
         item: {
@@ -67,92 +141,13 @@ export function useHandleServerEvent({
         },
       });
       sendClientEvent({ type: "response.create" });
-    } else if (functionCallParams.name === "transferAgents") {
-      const destinationAgent = args.destination_agent;
-      const newAgentConfig =
-        selectedAgentConfigSet?.find((a) => a.name === destinationAgent) || null;
-      if (newAgentConfig) {
-        setSelectedAgentName(destinationAgent);
-      }
-      const functionCallOutput = {
-        destination_agent: destinationAgent,
-        did_transfer: !!newAgentConfig,
-      };
-      sendClientEvent({
-        type: "conversation.item.create",
-        item: {
-          type: "function_call_output",
-          call_id: functionCallParams.call_id,
-          output: JSON.stringify(functionCallOutput),
-        },
-      });
-      addTranscriptBreadcrumb(
-        `function call: ${functionCallParams.name} response`,
-        functionCallOutput
-      );
-    } else if (functionCallParams.name === "display_purchase_controls_ui") {
-      console.log("Attempting to show purchase controls UI");
-      console.log("onShowUIComponent exists:", !!onShowUIComponent);
-      
-      if (onShowUIComponent) {
-        console.log("Calling onShowUIComponent with:", "purchaseControls", args);
-        onShowUIComponent("purchaseControls", args);
-      } else {
-        console.error("onShowUIComponent callback is not defined!");
-      }
-      
-      const functionCallOutput = {
-        success: true,
-        message: "Purchase controls UI displayed"
-      };
-      
-      sendClientEvent({
-        type: "conversation.item.create",
-        item: {
-          type: "function_call_output",
-          call_id: functionCallParams.call_id,
-          output: JSON.stringify(functionCallOutput),
-        },
-      });
-      addTranscriptBreadcrumb(
-        `function call: ${functionCallParams.name} response`,
-        functionCallOutput
-      );
-    } else if (functionCallParams.name === "display_statement_summary_ui") {
-      console.log("Attempting to show statement summary UI");
-      console.log("onShowUIComponent exists:", !!onShowUIComponent);
-      
-      if (onShowUIComponent) {
-        console.log("Calling onShowUIComponent with:", "statementSummary", args);
-        onShowUIComponent("statementSummary", args);
-      } else {
-        console.error("onShowUIComponent callback is not defined!");
-      }
-      
-      const functionCallOutput = {
-        success: true,
-        message: "Statement summary UI displayed"
-      };
-      
-      sendClientEvent({
-        type: "conversation.item.create",
-        item: {
-          type: "function_call_output",
-          call_id: functionCallParams.call_id,
-          output: JSON.stringify(functionCallOutput),
-        },
-      });
-      addTranscriptBreadcrumb(
-        `function call: ${functionCallParams.name} response`,
-        functionCallOutput
-      );
     } else {
+      // Fallback for unknown tool calls.
       const simulatedResult = { result: true };
       addTranscriptBreadcrumb(
         `function call fallback: ${functionCallParams.name}`,
         simulatedResult
       );
-
       sendClientEvent({
         type: "conversation.item.create",
         item: {
@@ -163,7 +158,7 @@ export function useHandleServerEvent({
       });
       sendClientEvent({ type: "response.create" });
     }
-  };
+  };  
 
   const handleServerEvent = useCallback((serverEvent: ServerEvent) => {
     logServerEvent(serverEvent);
@@ -173,8 +168,7 @@ export function useHandleServerEvent({
         if (serverEvent.session?.id) {
           setSessionStatus("CONNECTED");
           addTranscriptBreadcrumb(
-            `session.id: ${
-              serverEvent.session.id
+            `session.id: ${serverEvent.session.id
             }\nStarted at: ${new Date().toLocaleString()}`
           );
         }
@@ -198,7 +192,7 @@ export function useHandleServerEvent({
             text = "[Transcribing...]";
           }
           addTranscriptMessage(itemId, role, text);
-          
+
           if (role === "assistant" && text && onAgentResponse) {
             onAgentResponse(text);
           }
@@ -223,7 +217,7 @@ export function useHandleServerEvent({
         const deltaText = serverEvent.delta || "";
         if (itemId) {
           updateTranscriptMessage(itemId, deltaText, true);
-          
+
           if (deltaText && onAgentResponse) {
             onAgentResponse(deltaText);
           }
@@ -242,7 +236,7 @@ export function useHandleServerEvent({
         if (setIsTyping) {
           setIsTyping(false);
         }
-        
+
         if (serverEvent.response?.output) {
           serverEvent.response.output.forEach((outputItem) => {
             if (
@@ -289,7 +283,7 @@ export function useHandleServerEvent({
   ]);
 
   const handleServerEventRef = useRef(handleServerEvent);
-  
+
   useEffect(() => {
     handleServerEventRef.current = handleServerEvent;
   }, [handleServerEvent]);
